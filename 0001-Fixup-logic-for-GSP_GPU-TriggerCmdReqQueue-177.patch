@@ -1,0 +1,94 @@
+From cc220928bda5c16410dfa811a4bd4ba09d8ddec4 Mon Sep 17 00:00:00 2001
+From: PabloMK7 <hackyglitch2@gmail.com>
+Date: Fri, 12 Jul 2024 13:22:31 +0200
+Subject: [PATCH] Fixup logic for GSP_GPU::TriggerCmdReqQueue (#177)
+
+---
+ src/core/hle/service/gsp/gsp_command.h | 14 +++++++++++++-
+ src/core/hle/service/gsp/gsp_gpu.cpp   | 26 ++++++++++++++++++++------
+ 2 files changed, 33 insertions(+), 7 deletions(-)
+
+diff --git a/src/core/hle/service/gsp/gsp_command.h b/src/core/hle/service/gsp/gsp_command.h
+index ddc203615..c7d0da927 100644
+--- a/src/core/hle/service/gsp/gsp_command.h
++++ b/src/core/hle/service/gsp/gsp_command.h
+@@ -71,7 +71,12 @@ struct CacheFlushCommand {
+ 
+ /// GSP command
+ struct Command {
+-    BitField<0, 8, CommandId> id;
++    union {
++        BitField<0, 8, CommandId> id;
++        BitField<8, 8, u32> unknown1;
++        BitField<16, 8, u32> stop;
++        BitField<24, 8, u32> unknown2;
++    };
+     union {
+         DmaCommand dma_request;
+         SubmitCmdListCommand submit_gpu_cmdlist;
+@@ -86,6 +91,8 @@ static_assert(sizeof(Command) == 0x20, "Command struct has incorrect size");
+ 
+ /// GSP shared memory GX command buffer header
+ struct CommandBuffer {
++    static constexpr u32 STATUS_STOPPED = 0x1;
++    static constexpr u32 STATUS_CMD_FAILED = 0x80;
+     union {
+         u32 hex;
+ 
+@@ -99,6 +106,11 @@ struct CommandBuffer {
+         // application when writing a command to shared memory, after increasing this value
+         // TriggerCmdReqQueue is only used if this field is value 1.
+         BitField<8, 8, u32> number_commands;
++
++        // When any of the following flags are set to 1, the GSP module stops processing the
++        // commands in the command buffer.
++        BitField<16, 8, u32> status;
++        BitField<24, 8, u32> should_stop;
+     };
+ 
+     u32 unk[7];
+diff --git a/src/core/hle/service/gsp/gsp_gpu.cpp b/src/core/hle/service/gsp/gsp_gpu.cpp
+index 374bbe3c6..329c653c8 100644
+--- a/src/core/hle/service/gsp/gsp_gpu.cpp
++++ b/src/core/hle/service/gsp/gsp_gpu.cpp
+@@ -408,17 +408,31 @@ void GSP_GPU::SetLcdForceBlack(Kernel::HLERequestContext& ctx) {
+ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
+     IPC::RequestParser rp(ctx);
+ 
+-    // Iterate through each command.
+     auto* command_buffer = GetCommandBuffer(active_thread_id);
+     auto& gpu = system.GPU();
+-    for (u32 i = 0; i < command_buffer->number_commands; i++) {
+-        gpu.Debugger().GXCommandProcessed(command_buffer->commands[i]);
++    while (command_buffer->number_commands) {
++        if (command_buffer->should_stop) {
++            command_buffer->status.Assign(CommandBuffer::STATUS_STOPPED);
++            break;
++        }
++        if (command_buffer->status == CommandBuffer::STATUS_STOPPED) {
++            break;
++        }
+ 
+-        // Decode and execute command
+-        gpu.Execute(command_buffer->commands[i]);
++        Command command = command_buffer->commands[command_buffer->index];
+ 
+-        // Indicates that command has completed
++        // Decrease the number of commands remaining and increase the current index
+         command_buffer->number_commands.Assign(command_buffer->number_commands - 1);
++        command_buffer->index.Assign((command_buffer->index + 1) % 0xF);
++
++        gpu.Debugger().GXCommandProcessed(command);
++
++        // Decode and execute command
++        gpu.Execute(command);
++
++        if (command.stop) {
++            command_buffer->should_stop.Assign(1);
++        }
+     }
+ 
+     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+-- 
+2.46.2.windows.1
+
