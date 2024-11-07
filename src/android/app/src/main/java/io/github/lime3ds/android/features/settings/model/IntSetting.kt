@@ -60,8 +60,13 @@ enum class IntSetting(
     DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, 0),
     TEXTURE_FILTER("texture_filter", Settings.SECTION_RENDERER, 0),
     USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, 1),
+<<<<<<< ours
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, 0),
     ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, 2);
+=======
+    DELAY_RENDER_THREAD_US("delay_game_render_thread_us", Settings.SECTION_RENDERER, 0);
+
+>>>>>>> theirs
     override var int: Int = defaultValue
 
     override val valueAsString: String

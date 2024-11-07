@@ -473,6 +473,8 @@ struct Values {
 #elif defined(ENABLE_VULKAN)
         GraphicsAPI::Vulkan,
 #elif defined(ENABLE_SOFTWARE_RENDERER)
+    SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 16000,
+                                                             "delay_game_render_thread_us"};
         GraphicsAPI::Software,
 #else
 // TODO: Add a null renderer backend for this, perhaps.
