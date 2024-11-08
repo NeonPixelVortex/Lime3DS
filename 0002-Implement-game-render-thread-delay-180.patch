@@ -11,8 +11,8 @@ More details: https://www.reddit.com/r/Citra/comments/1e1v4e1/fixing_luigis_mans
  src/android/app/src/main/jni/default_ini.h    |  4 +
  .../app/src/main/res/values-es/strings.xml    |  2 +
  .../app/src/main/res/values/strings.xml       |  2 +
- src/citra/config.cpp                          |  1 +
- src/citra_qt/configuration/config.cpp         |  4 +
+ src/lime_sdl/config.cpp                          |  1 +
+ src/lime_qt/configuration/config.cpp         |  4 +
  .../configuration/configure_graphics.cpp      | 37 +++++++++
  .../configuration/configure_graphics.ui       | 77 +++++++++++++++++++
  src/common/settings.cpp                       |  2 +
@@ -28,11 +28,11 @@ index b2c378397..378c0eb05 100644
      VSYNC("use_vsync_new", Settings.SECTION_RENDERER, 1),
      DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, 0),
      TEXTURE_FILTER("texture_filter", Settings.SECTION_RENDERER, 0),
--    USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, 1);
+-    USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, 1),
 +    USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, 1),
-+    DELAY_RENDER_THREAD_US("delay_game_render_thread_us", Settings.SECTION_RENDERER, 0);
++    DELAY_RENDER_THREAD_US("delay_game_render_thread_us", Settings.SECTION_RENDERER, 0),
      USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, 0),
-     ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, 2);
+     ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, 2),
      override var int: Int = defaultValue
  
 diff --git a/src/android/app/src/main/java/io/github/lime3ds/android/features/settings/ui/SettingsFragmentPresenter.kt b/src/android/app/src/main/java/io/github/lime3ds/android/features/settings/ui/SettingsFragmentPresenter.kt
