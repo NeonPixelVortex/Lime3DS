@@ -177,9 +177,9 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
                 if (
                     isValidGame(game.filename.substring(game.filename.lastIndexOf(".") + 1).lowercase())
                 ) {
-                    R.attr.colorSurface
+                    com.google.android.material.R.attr.colorSurface
                 } else {
-                    R.attr.colorErrorContainer
+                    com.google.android.material.R.attr.colorErrorContainer
                 }
             binding.cardContents.setBackgroundColor(
                 MaterialColors.getColor(
